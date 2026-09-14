@@ -119,7 +119,40 @@ async def process_detail_url(context, detail_url):
 # ============================================================
 # LUỒNG CHẠY CHÍNH (ASYNC)
 # ============================================================
+import subprocess
+import shutil
+
 async def run_crawler(base_url, max_pages, status_box, progress_bar, table_placeholder):
+    results = []
+    processed_urls = set()
+
+    # Tự động đảm bảo Chromium binary đã cài đặt
+    try:
+        subprocess.run(["playwright", "install", "chromium"], check=True)
+    except Exception:
+        pass
+
+    # Tìm đường dẫn Chromium từ hệ thống Linux
+    chromium_path = shutil.which("chromium") or shutil.which("chromium-browser")
+
+    async with async_playwright() as p:
+        launch_kwargs = {
+            "headless": True,
+            "args": [
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--js-flags=--max-old-space-size=512"
+            ]
+        }
+        # Nếu tìm thấy Chromium hệ thống từ packages.txt, gán đường dẫn trực tiếp
+        if chromium_path:
+            launch_kwargs["executable_path"] = chromium_path
+
+        browser = await p.chromium.launch(**launch_kwargs)
+        
+        # ... (giữ nguyên toàn bộ phần code bên dưới của hàm run_crawler)
     results = []
     processed_urls = set()
 
